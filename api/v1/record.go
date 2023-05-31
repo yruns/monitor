@@ -28,3 +28,12 @@ func QueryRecords(c *gin.Context) {
 	res := recordService.QueryRecords()
 	response.Result(res, c)
 }
+
+func GetTableData(c *gin.Context) {
+
+	var tableService service.TableService
+
+	res := tableService.GetTableData()
+
+	response.Result(res, c)
+}
