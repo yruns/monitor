@@ -35,6 +35,8 @@ func NewRouter() *gin.Engine {
 		authed.POST("/email/code", api.SendEmailCode)
 		authed.GET("/email/verify", api.VerifyEmail)
 		authed.POST("/email/warning", api.SendWarningEmail)
+
+		authed.GET("/records", api.QueryRecords)
 	}
 	return r
 }

@@ -1,6 +1,6 @@
 package model
 
-type BasePage struct {
+type Page struct {
 	PageNum  int `form:"pageNum"`
 	PageSize int `form:"pageSize"`
 }

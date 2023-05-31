@@ -11,6 +11,7 @@ func migration() {
 			&model.User{},
 			&model.Admin{},
 			&model.Notice{},
+			&model.Record{},
 		)
 	if err != nil {
 		fmt.Println("自动迁移失败")
