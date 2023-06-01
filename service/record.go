@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"monitor/database"
 	"monitor/model"
 	"monitor/model/dto"
@@ -31,6 +32,7 @@ func (s *TableService) GetTableData() *response.Response {
 
 	// 近两周数据总数
 	twoWeeksAgoTotal, oneWeeksAgoTotal := len(twoWeeksAgoRecords), len(onwWeeksAgoRecords)
+	fmt.Println(twoWeeksAgoTotal, oneWeeksAgoTotal, int64(oneWeeksAgoTotal-twoWeeksAgoTotal))
 
 	twoWeeksAgoNormal, oneWeeksAgoNormal := 0, 0
 	for _, record := range twoWeeksAgoRecords {
@@ -40,9 +42,9 @@ func (s *TableService) GetTableData() *response.Response {
 	}
 
 	// 攻击分类计数
-	classificationCount := make(map[string]uint)
+	classificationCount := make(map[string]int64)
 	// 近七天分天计数
-	dayCount := [7]uint{0, 0, 0, 0, 0, 0, 0}
+	dayCount := [7]int64{0, 0, 0, 0, 0, 0, 0}
 
 	for _, record := range onwWeeksAgoRecords {
 		if record.Label == "normal" {
@@ -72,19 +74,19 @@ func (s *TableService) GetTableData() *response.Response {
 
 	// 攻击事件概览
 	overview := dto.Overview{
-		AttackIncrement: uint((oneWeeksAgoTotal - oneWeeksAgoNormal) - (twoWeeksAgoTotal - twoWeeksAgoNormal)),
-		AttackTotal:     uint(oneWeeksAgoTotal - oneWeeksAgoNormal),
+		AttackIncrement: int64((oneWeeksAgoTotal - oneWeeksAgoNormal) - (twoWeeksAgoTotal - twoWeeksAgoNormal)),
+		AttackTotal:     int64(oneWeeksAgoTotal - oneWeeksAgoNormal),
 
-		NormalIncrement: uint(oneWeeksAgoNormal - twoWeeksAgoNormal),
-		NormalTotal:     uint(oneWeeksAgoNormal),
+		NormalIncrement: int64(oneWeeksAgoNormal - twoWeeksAgoNormal),
+		NormalTotal:     int64(oneWeeksAgoNormal),
 
-		Variation: uint(oneWeeksAgoTotal - twoWeeksAgoTotal),
-		Total:     uint(oneWeeksAgoTotal),
+		Variation: int64(oneWeeksAgoTotal - twoWeeksAgoTotal),
+		Total:     int64(oneWeeksAgoTotal),
 	}
 
 	// 攻击事件类型统计
 	var attackName []string
-	var attackNum []uint
+	var attackNum []int64
 
 	for name, count := range classificationCount {
 		attackName = append(attackName, name)

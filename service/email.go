@@ -21,7 +21,7 @@ type EmailService struct {
 	Email    string `json:"email" form:"email"`
 	Password string `json:"password" form:"password"`
 	// 1:绑定邮箱  2:解绑邮箱	 3:更改密码
-	OperationType uint `json:"operation_type" form:"operation_type"`
+	OperationType int64 `json:"operation_type" form:"operation_type"`
 }
 
 var EMAILNOTICE = [3]string{
@@ -30,7 +30,7 @@ var EMAILNOTICE = [3]string{
 	"您正在更改密码",
 }
 
-func (s *EmailService) SendEmailCode(userId uint) *response.Response {
+func (s *EmailService) SendEmailCode(userId int64) *response.Response {
 
 	verifyCode := utils.GenerateEmailVerifyCode()
 
@@ -54,7 +54,7 @@ func (s *EmailService) SendEmailCode(userId uint) *response.Response {
 	return response.Ok()
 }
 
-func (s *WarningEmailService) SendWarningEmail(userId uint) *response.Response {
+func (s *WarningEmailService) SendWarningEmail(userId int64) *response.Response {
 
 	// 从用户表中查询用户的Email
 	var user model.User

@@ -16,6 +16,7 @@ func QueryRecords(c *gin.Context) {
 
 	if e1 != nil || e2 != nil {
 		response.FailWithStatusCode(http.StatusBadRequest, "参数错误", c)
+		return
 	}
 
 	var recordService = service.RecordService{

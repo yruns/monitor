@@ -75,7 +75,7 @@ func (s *UserService) Login() (*response.Response, *model.User) {
 	return response.OkWithData(user), &user
 }
 
-func (s *UserService) Update(userId uint) *response.Response {
+func (s *UserService) Update(userId int64) *response.Response {
 	var user model.User
 	_ = copier.Copy(&user, s)
 

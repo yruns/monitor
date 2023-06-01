@@ -10,7 +10,7 @@ var secret = []byte("&@HKD^&*@#$")
 type Claims struct {
 	Id        uint   `json:"id"`
 	Username  string `json:"username"`
-	Authority int    `json:"authority"`
+	Authority int64  `json:"authority"`
 	jwt.RegisteredClaims
 }
 
@@ -21,7 +21,7 @@ func GenerateToken(id uint, username string, authority int) (string, error) {
 	var claims = &Claims{
 		Id:        id,
 		Username:  username,
-		Authority: authority,
+		Authority: int64(authority),
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: expireTime,
 		},
