@@ -115,7 +115,7 @@ func (s *TableService) GetTableData() *response.Response {
 	dayCount := [7]int64{0, 0, 0, 0, 0, 0, 0}
 
 	for _, record := range oneWeeksAgoRecords {
-		if record.Label == "normal" {
+		if record.Label == "Benign" {
 			oneWeeksAgoNormal += 1
 			continue
 		}
