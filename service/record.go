@@ -1,10 +1,13 @@
 package service
 
 import (
+	"fmt"
 	"monitor/database"
 	"monitor/model"
 	"monitor/model/dto"
 	"monitor/pkg/response"
+	"monitor/pkg/utils"
+	"net"
 	"time"
 )
 
@@ -178,15 +181,19 @@ func (s *TableService) GetTableData() *response.Response {
 	})
 }
 
-func (s *RecordService) QueryRecords() *response.Response {
+func (s *RecordService) QueryRecords(label string) *response.Response {
 	pageNum := s.PageNum
 	pageSize := s.PageSize
 	offset := (pageNum - 1) * pageSize
 
 	var records []model.Record
 	var total int64
-	e1 := database.Mysql.Table("record").Count(&total).Error
-	e2 := database.Mysql.Table("record").Limit(pageSize).Offset(offset).Find(&records).Error
+	db := database.Mysql.Table("record")
+	if label != "" {
+		db = db.Where("label = ?", label)
+	}
+	e1 := db.Count(&total).Error
+	e2 := db.Limit(pageSize).Offset(offset).Find(&records).Error
 	if e1 != nil || e2 != nil {
 		return response.FailWithMessage("历史记录查询失败")
 	}
@@ -195,4 +202,58 @@ func (s *RecordService) QueryRecords() *response.Response {
 		Data:  records,
 		Total: total,
 	})
+}
+
+func (s *RecordService) IPStatistics() *response.Response {
+	aWeekAgo := time.Now().AddDate(0, 0, -7)
+
+	// 根据ip分组查询
+	var ipCount []struct {
+		SrcHost string
+		//Records []model.Record `gorm:"foreignKey:src_host"`
+		Count int64
+	}
+	err := database.Mysql.Table("record").
+		Select("src_host, COUNT(*) as count").
+		Where("date > ?", aWeekAgo).
+		Group("src_host").
+		Order("count DESC").
+		Limit(10).
+		Find(&ipCount).Error
+	if err != nil {
+		return response.FailWithMessage("数据查询失败")
+	}
+
+	fmt.Println(ipCount)
+
+	var items [10]dto.IpStatistics
+	// 根据ip进行统计
+	for i, count := range ipCount {
+		ip := net.ParseIP(count.SrcHost)
+		record, err := database.GeoIP.City(ip)
+		if err != nil {
+			return response.FailWithMessage("ip地址查询失败")
+		}
+
+		var records []model.Record
+		database.Mysql.Table("record").Where("src_host = ?", count.SrcHost).Find(&records)
+
+		var attackName []string
+		for _, r := range records {
+			if !utils.Contains(attackName, r.Label) {
+				attackName = append(attackName, r.Label)
+			}
+		}
+
+		items[i] = dto.IpStatistics{
+			IP:         count.SrcHost,
+			Count:      int64(len(records)),
+			Address:    record.Country.Names["zh-CN"] + record.City.Names["zh-CN"],
+			AttackName: attackName,
+			StartTime:  records[0].Date,
+			EndTime:    records[len(records)-1].Date,
+		}
+	}
+
+	return response.OkWithData(items)
 }

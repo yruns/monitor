@@ -21,6 +21,8 @@ var (
 	RedisPasswd   string
 	RedisDatabase int
 
+	GeoFilePath string
+
 	MinioHost            string
 	MinioPort            string
 	MinioAccessKeyID     string
@@ -45,6 +47,7 @@ func Init() {
 	loadServer(file)
 	loadMysql(file)
 	loadRedis(file)
+	loadGeoIp(file)
 	loadMinio(file)
 	loadEmail(file)
 
@@ -54,7 +57,12 @@ func Init() {
 		MysqlUser, MysqlPasswd, MysqlHost, MysqlPort, MysqlDatabase)
 	database.InitMysql(connRead, connWrite)
 	database.InitRedis(RedisHost, RedisPasswd, RedisPort, RedisDatabase)
+	database.InitGeoIp(GeoFilePath)
 
+}
+
+func loadGeoIp(file *ini.File) {
+	GeoFilePath = file.Section("geoip").Key("GeoFilePath").String()
 }
 
 func loadServer(file *ini.File) {
