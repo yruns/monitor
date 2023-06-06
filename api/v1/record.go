@@ -31,10 +31,15 @@ func QueryRecords(c *gin.Context) {
 }
 
 func GetTableData(c *gin.Context) {
-
 	var tableService service.TableService
-
 	res := tableService.GetTableData()
+
+	response.Result(res, c)
+}
+
+func DetailedReport(c *gin.Context) {
+	var reportService service.ReportService
+	res := reportService.DetailedReport()
 
 	response.Result(res, c)
 }

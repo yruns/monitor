@@ -38,6 +38,7 @@ func NewRouter() *gin.Engine {
 
 		authed.GET("/records/list", api.QueryRecords)
 		authed.GET("/records/tables", api.GetTableData)
+		authed.GET("/records/reports", api.DetailedReport)
 	}
 	return r
 }
