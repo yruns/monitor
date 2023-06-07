@@ -42,6 +42,11 @@ func NewRouter() *gin.Engine {
 		authed.GET("/records/ip", api.IPStatistics)
 
 		authed.GET("/version/list", api.GetVersionList)
+
+		authed.GET("/log/list", api.GetLogList)
+
+		authed.GET("/blacklist/list", api.GetBlackList)
+		authed.POST("/blacklist/add", api.AddBlackList)
 	}
 	return r
 }

@@ -5,7 +5,7 @@ import (
 )
 
 type Record struct {
-	Id       int64     `json:"id" form:"id"`
+	Id       int64     `json:"id" form:"id" gorm:"primary_key"`
 	Date     time.Time `json:"date" form:"date"`           // 数据包时间
 	Duration int64     `json:"duration" form:"duration"`   // 持续时间
 	Protocol string    `json:"protocol" form:"protocol"`   // 协议
