@@ -15,7 +15,7 @@ func VerifyEmail(c *gin.Context) {
 	userId, _ := c.Get("userId")
 
 	codeFromUser := c.Query("code")
-	codeFromDB, _ := database.Redis.Get(c, "user:verify:"+strconv.Itoa(int(userId.(int64)))).Result()
+	codeFromDB, _ := database.Redis.Get(c, "user:verify:"+strconv.Itoa(int(userId.(uint)))).Result()
 
 	if strings.EqualFold(codeFromDB, codeFromUser) {
 		response.Result(response.Ok(), c)
@@ -34,7 +34,7 @@ func SendEmailCode(c *gin.Context) {
 
 	userId, _ := c.Get("userId")
 
-	res := emailService.SendEmailCode(userId.(int64))
+	res := emailService.SendEmailCode(int64(userId.(uint)))
 	response.Result(res, c)
 }
 
@@ -48,6 +48,6 @@ func SendWarningEmail(c *gin.Context) {
 
 	userId, _ := c.Get("userId")
 
-	res := warningEmailService.SendWarningEmail(userId.(int64))
+	res := warningEmailService.SendWarningEmail(int64(userId.(uint)))
 	response.Result(res, c)
 }

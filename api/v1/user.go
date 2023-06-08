@@ -60,7 +60,7 @@ func UserUpdate(c *gin.Context) {
 
 	// 获取用户id
 	userId, _ := c.Get("userId")
-	res := userUpdate.Update(userId.(int64))
+	res := userUpdate.Update(int64(userId.(uint)))
 	response.Result(res, c)
 }
 
@@ -84,7 +84,7 @@ func UploadAvatar(c *gin.Context) {
 
 	// 修改数据库中信息
 	userId, _ := c.Get("userId")
-	userId = userId.(int64)
+	userId = userId.(uint)
 
 	err = database.Mysql.Table("user").Where("id = ?", userId).Update("avatar", localPath).Error
 	if err != nil {
