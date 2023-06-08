@@ -33,6 +33,7 @@ func (s *BlacklistService) AddBlackList() *response.Response {
 		Grade:      3,
 		Status:     "禁止访问",
 		CreateTime: time.Now(),
+		UpdateTime: time.Now(),
 	}
 	err := database.Mysql.Table("blacklist").Create(&black).Error
 	if err != nil {
