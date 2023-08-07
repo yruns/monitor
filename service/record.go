@@ -1,6 +1,8 @@
 package service
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"monitor/database"
 	"monitor/model"
@@ -51,6 +53,17 @@ func computeGrade(severity int64) string {
 }
 
 func (s *ReportService) DetailedReport() *response.Response {
+	cache, e := database.Redis.Get(context.Background(), "data:reports").Result()
+	if e == nil && cache != "" {
+		var items []dto.Table
+
+		e := json.Unmarshal([]byte(cache), &items)
+		if e != nil {
+			return response.FailWithMessage("json 反序列化失败" + e.Error())
+		}
+		return response.OkWithData(items)
+	}
+
 	oneWeeksAgo := time.Now().AddDate(0, 0, -7)
 	var oneWeeksAgoRecords []model.Record
 
@@ -85,10 +98,30 @@ func (s *ReportService) DetailedReport() *response.Response {
 		})
 	}
 
+	// 写入redis
+	bytes, err := json.Marshal(items)
+	if err != nil {
+		return response.FailWithMessage("json序列化失败")
+	}
+
+	database.Redis.SetEx(context.Background(), "data:reports", string(bytes), time.Hour*24*30)
+
 	return response.OkWithData(items)
 }
 
 func (s *TableService) GetTableData() *response.Response {
+	// 查询是否在缓存中
+	cache, err := database.Redis.Get(context.Background(), "data:record").Result()
+	if cache != "" && err == nil {
+		var result dto.TotalResult
+		err := json.Unmarshal([]byte(cache), &result)
+		if err != nil {
+			return response.FailWithMessage("json Unmarshal失败")
+		}
+
+		return response.OkWithData(result)
+	}
+
 	// 从数据库中查询最近两周的数据
 	oneWeeksAgo := time.Now().AddDate(0, 0, -7)
 	twoWeeksAgo := time.Now().AddDate(0, 0, -14)
@@ -174,11 +207,20 @@ func (s *TableService) GetTableData() *response.Response {
 		AttackNum: dayCount,
 	}
 
-	return response.OkWithData(map[string]interface{}{
-		"overview":   overview,
-		"statistics": statistics,
-		"analysis":   analysis,
-	})
+	result := dto.TotalResult{
+		OverviewResult:   overview,
+		StatisticsResult: statistics,
+		AnalysisResult:   analysis,
+	}
+
+	bytes, err := json.Marshal(result)
+	if err != nil {
+		return nil
+	}
+
+	database.Redis.SetEx(context.Background(), "data:record", string(bytes), time.Second*60*60*24*30)
+
+	return response.OkWithData(result)
 }
 
 func (s *RecordService) QueryRecords(label string) *response.Response {
