@@ -1,13 +1,17 @@
 package service
 
 import (
+	"context"
 	"monitor/database"
 	"monitor/model"
 	"monitor/model/dto"
 	"monitor/pkg/response"
+	"strconv"
+	"time"
 )
 
 type VersionService struct {
+	SelectedId int64 `json:"selected_id" form:"selected_id"`
 }
 
 func (s *VersionService) GetVersionList() *response.Response {
@@ -33,4 +37,37 @@ func (s *VersionService) GetVersionList() *response.Response {
 	}
 
 	return response.OkWithData(versionDtos)
+}
+
+func (s *VersionService) SetModelVersion(version string) *response.Response {
+
+	vInt, err := strconv.Atoi(version)
+	if err != nil {
+		// 获取第一个作为默认值
+		var v model.Version
+		err := database.Mysql.Table("version").First(&v).Error
+		if err != nil {
+			return response.FailWithMessage("获取版本信息失败")
+		}
+		vInt = int(v.Id)
+	}
+
+	database.Redis.SetEx(context.Background(), "version:id", strconv.Itoa(vInt), time.Hour*24*30*30)
+	return response.OkWithMessage("模型版本设置成功")
+}
+
+func (s *VersionService) GetModelVersion() *response.Response {
+
+	vId, err := database.Redis.Get(context.Background(), "version:id").Result()
+	if err != nil {
+		// 获取第一个作为默认值
+		var v model.Version
+		err := database.Mysql.Table("version").First(&v).Error
+		if err != nil {
+			return response.FailWithMessage("获取版本信息失败")
+		}
+		vId = strconv.Itoa(int(v.Id))
+	}
+
+	return response.OkWithData(vId)
 }
