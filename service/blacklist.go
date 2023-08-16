@@ -21,6 +21,12 @@ func (s *BlacklistService) GetBlackList(pageNum int, pageSize int) *response.Res
 	if err != nil {
 		return response.FailWithMessage("获取日志信息失败")
 	}
+
+	// 这个应该给前端来做
+	for i := 0; i < len(blacklist); i++ {
+		blacklist[i].Id = uint(i + 1)
+	}
+
 	return response.OkWithData(model.PageResult{
 		Data:  blacklist,
 		Total: total,
@@ -28,6 +34,10 @@ func (s *BlacklistService) GetBlackList(pageNum int, pageSize int) *response.Res
 }
 
 func (s *BlacklistService) AddBlackList() *response.Response {
+	if s.Ip == "" {
+		return response.FailWithMessage("输入IP不能为空")
+	}
+
 	black := model.Blacklist{
 		Ip:         s.Ip,
 		Grade:      3,

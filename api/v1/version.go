@@ -6,15 +6,19 @@ import (
 	"monitor/service"
 )
 
+var (
+	versionService = service.VersionService{}
+)
+
 func GetVersionList(c *gin.Context) {
-	var versionService service.VersionService
+	//var versionService service.VersionService
 
 	res := versionService.GetVersionList()
 	response.Result(res, c)
 }
 
 func SetModelVersion(c *gin.Context) {
-	var versionService service.VersionService
+	//var versionService service.VersionService
 	version := c.Query("version")
 
 	res := versionService.SetModelVersion(version)
@@ -22,7 +26,7 @@ func SetModelVersion(c *gin.Context) {
 }
 
 func SetVersionList(c *gin.Context) {
-	var versionService service.VersionService
+	//var versionService service.VersionService
 
 	res := versionService.GetModelVersion()
 	response.Result(res, c)

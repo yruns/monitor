@@ -11,7 +11,6 @@ import (
 )
 
 type VersionService struct {
-	SelectedId int64 `json:"selected_id" form:"selected_id"`
 }
 
 func (s *VersionService) GetVersionList() *response.Response {

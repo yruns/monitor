@@ -10,6 +10,7 @@ import (
 	"monitor/pkg/response"
 	"monitor/pkg/utils"
 	"net"
+	"strings"
 	"time"
 )
 
@@ -247,6 +248,18 @@ func (s *RecordService) QueryRecords(label string) *response.Response {
 }
 
 func (s *RecordService) IPStatistics() *response.Response {
+
+	// 从redis中读取
+	cache, e := database.Redis.Get(context.Background(), "data:ipStatistics").Result()
+	if e == nil && cache != "" {
+		var items [10]dto.IpStatistics
+		err := json.Unmarshal([]byte(cache), &items)
+		if err != nil {
+			return response.FailWithMessage("json反序列化失败，" + err.Error())
+		}
+		return response.OkWithData(items)
+	}
+
 	aWeekAgo := time.Now().AddDate(0, 0, -7)
 
 	// 根据ip分组查询
@@ -257,24 +270,23 @@ func (s *RecordService) IPStatistics() *response.Response {
 	}
 	err := database.Mysql.Table("record").
 		Select("src_host, COUNT(*) as count").
-		Where("date > ?", aWeekAgo).
+		Where("date > ? AND label <> 'Benign'", aWeekAgo).
 		Group("src_host").
 		Order("count DESC").
 		Limit(10).
 		Find(&ipCount).Error
 	if err != nil {
-		return response.FailWithMessage("数据查询失败")
+		return response.FailWithMessage("数据查询失败," + err.Error())
 	}
-
-	fmt.Println(ipCount)
 
 	var items [10]dto.IpStatistics
 	// 根据ip进行统计
 	for i, count := range ipCount {
+		count.SrcHost = strings.TrimSpace(count.SrcHost)
 		ip := net.ParseIP(count.SrcHost)
 		record, err := database.GeoIP.City(ip)
 		if err != nil {
-			return response.FailWithMessage("ip地址查询失败")
+			return response.FailWithMessage("ip地址查询失败, " + err.Error())
 		}
 
 		var records []model.Record
@@ -294,6 +306,15 @@ func (s *RecordService) IPStatistics() *response.Response {
 			AttackName: attackName,
 			StartTime:  records[0].Date,
 			EndTime:    records[len(records)-1].Date,
+		}
+	}
+
+	// 写入到redis
+	bytes, err := json.Marshal(items)
+	if err == nil {
+		err = database.Redis.SetEx(context.Background(), "data:ipStatistics", bytes, time.Hour*24*90).Err()
+		if err != nil {
+			fmt.Println(err.Error())
 		}
 	}
 
